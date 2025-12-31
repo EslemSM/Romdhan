@@ -1,8 +1,10 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.adhkar import Adhkar
 from models.favorite_adhkar import FavoriteAdhkar
 from models.db import db
 from schemas import AdhkarSchema, FavoriteAdhkarSchema
+
 
 adhkar_bp = Blueprint('adhkar', __name__)
 
@@ -24,30 +26,68 @@ def get_adhkar_by_category(category):
     return adhkar_list_schema.dump(adhkar), 200
 
 
-@adhkar_bp.route('/favorite', methods=['POST'])
+# 🔐 ADD FAVORITE
+@adhkar_bp.route("/favorite", methods=["POST"])
+@jwt_required()
 def add_favorite():
+    user_id = get_jwt_identity()
     data = request.get_json()
-    fav = FavoriteAdhkar(**data)
+
+    adhkar = Adhkar.query.get(data["adhkar_id"])
+    if not adhkar:
+        return {"error": "Adhkar not found"}, 404
+
+    fav = FavoriteAdhkar(
+        user_id=user_id,
+        adhkar_id=data["adhkar_id"]
+    )
+
     db.session.add(fav)
     db.session.commit()
+
     return fav_schema.dump(fav), 201
 
 
-@adhkar_bp.route('/favorite/<int:id>', methods=['DELETE'])
+# 🔐 DELETE FAVORITE
+@adhkar_bp.route("/favorite/<int:id>", methods=["DELETE"])
+@jwt_required()
 def delete_favorite(id):
-    fav = FavoriteAdhkar.query.get_or_404(id)
+    user_id = get_jwt_identity()
+
+    fav = FavoriteAdhkar.query.filter_by(id=id, user_id=user_id).first_or_404()
     db.session.delete(fav)
     db.session.commit()
+
     return {"message": "Favorite removed"}, 200
 
 
-@adhkar_bp.route('/favorite', methods=['GET'])
-def get_all_favorites():
-    favs = FavoriteAdhkar.query.all()
+# 🔐 GET USER FAVORITES (FULL ADHKAR)
+@adhkar_bp.route("/favorite", methods=["GET"])
+@jwt_required()
+def get_my_favorites():
+    user_id = get_jwt_identity()
+
+    favs = FavoriteAdhkar.query.filter_by(user_id=user_id).all()
     return fav_list_schema.dump(favs), 200
 
 
+
+# 🔐 GET USER FAVORITES BY CATEGORY (PROTECTED)
 @adhkar_bp.route('/favorite/category/<string:category>', methods=['GET'])
+@jwt_required()
 def get_favorite_by_category(category):
-    favs = FavoriteAdhkar.query.join(Adhkar).filter(Adhkar.category == category).all()
+    # Get the authenticated user's ID
+    user_id = get_jwt_identity()
+    
+    # Filter favorites by both user_id AND category
+    favs = (
+        FavoriteAdhkar.query
+        .join(Adhkar)
+        .filter(
+            FavoriteAdhkar.user_id == user_id,
+            Adhkar.category == category
+        )
+        .all()
+    )
+    
     return fav_list_schema.dump(favs), 200

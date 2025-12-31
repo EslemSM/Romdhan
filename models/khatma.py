@@ -1,5 +1,5 @@
 from .db import db
-
+from datetime import datetime, timezone
 class Khatma(db.Model):
     __tablename__ = "khatma"
 
@@ -16,4 +16,3 @@ class Khatma(db.Model):
     )
 
     completion_date = db.Column(db.Date)
-    completion_doua = db.Column(db.Text)

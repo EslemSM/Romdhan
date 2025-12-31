@@ -1,6 +1,6 @@
 from flask import Flask
 from models.db import db
-
+from flask_jwt_extended import JWTManager
 
 def create_app():
     print("CREATE_APP CALLED") 
@@ -14,6 +14,8 @@ def create_app():
         'connect_args': {'connect_timeout': 5}
     }
 
+    app.config["JWT_SECRET_KEY"] = "ramadhan-secret-key"  # change later
+    jwt = JWTManager(app)
     # Initialize database (with error handling - don't fail app startup if DB unavailable)
     try:
         db.init_app(app)
@@ -66,6 +68,48 @@ def create_app():
         print("✓ Doua blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register doua blueprint: {e}")
+
+    try:
+        from resources.user_resources import user_bp
+        app.register_blueprint(user_bp, url_prefix="/users")
+        print("✓ user blueprint registered")
+    except Exception as e:
+        print(f"✗ Failed to register doua blueprint: {e}")
+    
+    try: 
+        from resources.khatma_resources import khatma_bp
+        app.register_blueprint(khatma_bp, url_prefix="/khatma")
+        print("✓ khatma blueprint registered")
+    except Exception as e:
+        print(f"✗ Failed to register khatma blueprint: {e}")
+
+    try:
+        from resources.recipe_resource import recipe_bp
+        app.register_blueprint(recipe_bp, url_prefix="/recipes")
+        print("✓ recipes blueprint registered")
+    except Exception as e:
+        print(f"✗ Failed to register recipes blueprint: {e}")
+
+
+    try:
+        from resources.user_adhkar import user_adhkar_bp
+        app.register_blueprint(user_adhkar_bp, url_prefix="/user_adhkar")
+        print("✓ user_adhkar blueprint registered")
+    except Exception as e:
+        print(f"✗ Failed to register user_adhkar blueprint: {e}")
+
+
+    try:
+        from resources.user_doua import user_doua_bp
+        app.register_blueprint(user_doua_bp, url_prefix="/user_doua")
+        print("✓ user_doua blueprint registered")
+    except Exception as e:
+        print(f"✗ Failed to register user_doua blueprint: {e}")
+
+
+   
+
+
 
 
     print(app.url_map)

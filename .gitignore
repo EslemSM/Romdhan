@@ -3,3 +3,6 @@ __pycache__/
 venv/
 instance/
 *.sqlite3
+*.pyc
+# Migrations cache (if auto-generated)
+*.log
