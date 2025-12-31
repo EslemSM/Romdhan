@@ -7,18 +7,13 @@ from models.favorite_adhkar import FavoriteAdhkar
 from models.db import db
 from schemas import AdhkarSchema, FavoriteAdhkarSchema
 
-# -------------------------------------------------------------------
-# Blueprint
-# -------------------------------------------------------------------
+
 adhkar_bp = Blueprint(
     "adhkar_bp",
     __name__,
     description="Remembering Allah"
 )
 
-# -------------------------------------------------------------------
-# Schemas (MUST be defined before routes)
-# -------------------------------------------------------------------
 adhkar_schema = AdhkarSchema()
 adhkar_list_schema = AdhkarSchema(many=True)
 
@@ -30,7 +25,7 @@ class FavoriteAdhkarCreateSchema(Schema):
     adhkar_id = fields.Int(required=True)
 
 
-# -------------------------------------------------------------------
+
 # Public endpoints (NO JWT)
 # -------------------------------------------------------------------
 
@@ -51,9 +46,7 @@ def get_adhkar_by_category(category):
     return adhkar
 
 
-# -------------------------------------------------------------------
-# Protected endpoints (JWT REQUIRED 🔐)
-# -------------------------------------------------------------------
+
 
 @adhkar_bp.route("/favorite", methods=["POST"])
 @adhkar_bp.doc(security=[{"bearerAuth": []}])

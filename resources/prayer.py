@@ -15,7 +15,7 @@ DEFAULT_LOCATION = {
     "lon": 10.1815
 }
 
-# ✅ ALL your cities preserved
+# ALL your cities preserved
 CITIES = {
     "tunis": (36.8065, 10.1815),
     "ariana": (36.8665, 10.1647),
@@ -62,7 +62,7 @@ def calculate_prayer_times(lat, lon):
         "isha": times['isha']
     }
 
-# 🔹 GET /prayer (explicit "/" with strict_slashes=False for reliable matching)
+#  GET /prayer (explicit "/" with strict_slashes=False for reliable matching)
 @prayer_bp.route("/", methods=["GET"], strict_slashes=False)
 def get_all_prayers():
     print("Route hit!")  # Debug print - remove once working
@@ -76,7 +76,7 @@ def get_all_prayers():
         "prayers": timings
     }, 200
 
-# 🔹 GET /prayer/city/<city> (added strict_slashes=False)
+#  GET /prayer/city/<city> (added strict_slashes=False)
 @prayer_bp.route("/city/<string:city>", methods=["GET"], strict_slashes=False)
 def get_prayers_by_city(city):
     city = city.lower()
@@ -92,7 +92,7 @@ def get_prayers_by_city(city):
         "prayers": timings
     }, 200
 
-# 🔹 GET /prayer/name/<prayer_name> (added strict_slashes=False)
+#  GET /prayer/name/<prayer_name> (added strict_slashes=False)
 @prayer_bp.route("/name/<string:prayer_name>", methods=["GET"], strict_slashes=False)
 def get_single_prayer(prayer_name):
     prayer_name = prayer_name.lower()

@@ -8,18 +8,13 @@ from models.favorite_doua import FavoriteDoua
 from models.db import db
 from schemas import DouaSchema, FavoriteDouaSchema
 
-# -------------------------------------------------------------------
-# Blueprint
-# -------------------------------------------------------------------
+
 doua_bp = Blueprint(
     "doua_bp",
     __name__,
     description="Get Doua by calling Allah's name"
 )
 
-# -------------------------------------------------------------------
-# Schemas (MUST be defined before routes)
-# -------------------------------------------------------------------
 doua_schema = DouaSchema()
 doua_list_schema = DouaSchema(many=True)
 
@@ -27,13 +22,11 @@ fav_schema = FavoriteDouaSchema()
 fav_list_schema = FavoriteDouaSchema(many=True)
 
 # Input schema for POST /favorite
-class FavoriteCreateSchema(Schema):
+class FavoriteDouaCreateSchema(Schema):
     doua_id = fields.Int(required=True)
 
 
-# -------------------------------------------------------------------
-# Public endpoints (NO JWT)
-# -------------------------------------------------------------------
+
 
 @doua_bp.route("/", methods=["GET"])
 @doua_bp.response(200, doua_list_schema)
@@ -51,13 +44,10 @@ def get_doua_by_name(esm):
     return doua
 
 
-# -------------------------------------------------------------------
-# Protected endpoints (JWT REQUIRED 🔐)
-# -------------------------------------------------------------------
 
 @doua_bp.route("/favorite", methods=["POST"])
 @doua_bp.doc(security=[{"bearerAuth": []}])
-@doua_bp.arguments(FavoriteCreateSchema)
+@doua_bp.arguments(FavoriteDouaCreateSchema)
 @doua_bp.response(201, fav_schema)
 @jwt_required()
 def add_favorite(data):

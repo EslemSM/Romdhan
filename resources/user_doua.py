@@ -1,66 +1,107 @@
-from flask import Blueprint, request
+from flask_smorest import Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from marshmallow import Schema, fields
 from models.user_doua import UserDoua
 from models.db import db
 from schemas import UserDouaSchema
 
-user_doua_bp = Blueprint("user_doua", __name__)
+user_doua_bp = Blueprint(
+    "user_doua",
+    __name__,
+    description="User custom Doua management"
+)
 
-schema = UserDouaSchema()
-list_schema = UserDouaSchema(many=True)
+
+doua_schema = UserDouaSchema()
+doua_list_schema = UserDouaSchema(many=True)
 
 
-# 🔐 CREATE
+class UserDouaCreateSchema(Schema):
+    title = fields.Str()
+    text_ar = fields.Str(required=True)
+    text_latin = fields.Str()
+    category = fields.Str()
+
+class UserDouaUpdateSchema(Schema):
+    title = fields.Str()
+    text_ar = fields.Str(required=True)
+    text_latin = fields.Str()
+    category = fields.Str()
+
+class UserDouaPatchSchema(Schema):
+    title = fields.Str()
+    text_ar = fields.Str()
+    text_latin = fields.Str()
+    category = fields.Str()
+
+
+
+# CREATE
+
 @user_doua_bp.route("/", methods=["POST"])
+@user_doua_bp.doc(security=[{"bearerAuth": []}])
+@user_doua_bp.arguments(UserDouaCreateSchema)
+@user_doua_bp.response(201, doua_schema)
 @jwt_required()
-def create_user_doua():
+def create_user_doua(data):
+    """Create a new dua for the authenticated user."""
     user_id = get_jwt_identity()
-    data = request.get_json()
 
     doua = UserDoua(
         user_id=user_id,
         title=data.get("title"),
         text_ar=data["text_ar"],
         text_latin=data.get("text_latin"),
-        category=data.get("category")
+        category=data.get("category"),
     )
 
     db.session.add(doua)
     db.session.commit()
 
-    return schema.dump(doua), 201
+    return doua
 
 
-# 🔐 GET ALL
+
+# GET ALL (current user)
+
 @user_doua_bp.route("/", methods=["GET"])
+@user_doua_bp.doc(security=[{"bearerAuth": []}])
+@user_doua_bp.response(200, doua_list_schema)
 @jwt_required()
 def get_user_doua():
+    """Get all duas for the authenticated user."""
     user_id = get_jwt_identity()
-    doua = UserDoua.query.filter_by(user_id=user_id).all()
-    return list_schema.dump(doua), 200
+    return UserDoua.query.filter_by(user_id=user_id).all()
 
 
-# 🔐 GET BY CATEGORY
+
+#  GET BY CATEGORY
+
 @user_doua_bp.route("/category/<string:category>", methods=["GET"])
+@user_doua_bp.doc(security=[{"bearerAuth": []}])
+@user_doua_bp.response(200, doua_list_schema)
 @jwt_required()
 def get_user_doua_by_category(category):
+    """Get duas filtered by category."""
     user_id = get_jwt_identity()
 
-    doua = UserDoua.query.filter_by(
+    return UserDoua.query.filter_by(
         user_id=user_id,
         category=category
     ).all()
 
-    return list_schema.dump(doua), 200
 
 
+#  PUT (replace whole row)
 
-# 🔐 PUT
 @user_doua_bp.route("/<int:id>", methods=["PUT"])
+@user_doua_bp.doc(security=[{"bearerAuth": []}])
+@user_doua_bp.arguments(UserDouaUpdateSchema)
+@user_doua_bp.response(200, doua_schema)
 @jwt_required()
-def update_user_doua(id):
+def update_user_doua(data, id):
+    """Replace a dua completely."""
     user_id = get_jwt_identity()
-    data = request.get_json()
 
     doua = UserDoua.query.filter_by(id=id, user_id=user_id).first_or_404()
 
@@ -70,15 +111,20 @@ def update_user_doua(id):
     doua.category = data.get("category")
 
     db.session.commit()
-    return schema.dump(doua), 200
+    return doua
 
 
-# 🔐 PATCH
+
+#  PATCH (partial update)
+
 @user_doua_bp.route("/<int:id>", methods=["PATCH"])
+@user_doua_bp.doc(security=[{"bearerAuth": []}])
+@user_doua_bp.arguments(UserDouaPatchSchema)
+@user_doua_bp.response(200, doua_schema)
 @jwt_required()
-def patch_user_doua(id):
+def patch_user_doua(data, id):
+    """Update one or more fields of a dua."""
     user_id = get_jwt_identity()
-    data = request.get_json()
 
     doua = UserDoua.query.filter_by(id=id, user_id=user_id).first_or_404()
 
@@ -92,17 +138,22 @@ def patch_user_doua(id):
         doua.category = data["category"]
 
     db.session.commit()
-    return schema.dump(doua), 200
+    return doua
 
 
-# 🔐 DELETE
+
+#  DELETE
+
 @user_doua_bp.route("/<int:id>", methods=["DELETE"])
+@user_doua_bp.doc(security=[{"bearerAuth": []}])
+@user_doua_bp.response(200)
 @jwt_required()
 def delete_user_doua(id):
+    """Delete a dua."""
     user_id = get_jwt_identity()
-    doua = UserDoua.query.filter_by(id=id, user_id=user_id).first_or_404()
 
+    doua = UserDoua.query.filter_by(id=id, user_id=user_id).first_or_404()
     db.session.delete(doua)
     db.session.commit()
 
-    return {"message": "User doua deleted"}, 200
+    return {"message": "User dua deleted"}

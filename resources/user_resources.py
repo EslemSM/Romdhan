@@ -14,8 +14,8 @@ user_bp = Blueprint("users", __name__, description = "Make an account")
 #user_login_schema = UserLoginSchema()
 #token_schema = TokenSchema()
 
-# 🟢 REGISTER
-# 🟢 REGISTER
+
+#  REGISTER
 @user_bp.route("/register")
 class UserRegister(MethodView):
 
@@ -37,7 +37,7 @@ class UserRegister(MethodView):
 
 
 
-# 🔐 LOGIN
+#  LOGIN
 @user_bp.route("/login")
 class UserLogin(MethodView):
 
@@ -55,7 +55,7 @@ class UserLogin(MethodView):
 
 
 
-# ==================== LOGOUT ====================
+# LOGOUT 
 @user_bp.route("/logout")
 class UserLogout(MethodView):
     @jwt_required()

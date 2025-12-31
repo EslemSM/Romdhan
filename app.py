@@ -24,7 +24,7 @@ def create_app():
     
     # Initialize database (with error handling - don't fail app startup if DB unavailable)
 
-    # 🔹 New: Flask-Smorest / Swagger configuration
+    # Flask-Smorest / Swagger configuration
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config["API_TITLE"] = "Ramadhan Journey API"
     app.config["API_VERSION"] = "v1"
@@ -32,7 +32,7 @@ def create_app():
     app.config["OPENAPI_URL_PREFIX"] = "/"                  # Base path for OpenAPI
     app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui/" # Trailing slash is required
     app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/"
-    # 🔹 NEW: Add JWT Bearer Auth to Swagger/OpenAPI
+    #  JWT Bearer Auth to Swagger/OpenAPI
     app.config["API_SPEC_OPTIONS"] = {
         "security": [{"bearerAuth": []}],
         "components": {
@@ -56,7 +56,6 @@ def create_app():
         print("✓ Database initialized")
     except Exception as e:
         print(f"⚠ Database initialization warning (app will continue): {type(e).__name__}: {e}")
-        # Don't fail the app if database isn't available - some endpoints don't need it
 
         
     # Import and register blueprints (with error handling)
@@ -96,7 +95,7 @@ def create_app():
         print("✓ Ahadith blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register ahadith blueprint: {e}")
-    #doua is done on swagger
+    
     try:
         from resources.doua_resource import doua_bp as doua_bp
         api.register_blueprint(doua_bp, url_prefix='/doua')
@@ -112,31 +111,31 @@ def create_app():
         print(f"✗ Failed to register doua blueprint: {e}")
     
     try: 
-        from resources.khatma_resources import khatma_bp
-        app.register_blueprint(khatma_bp, url_prefix="/khatma")
+        from resources.khatma_resources import khatma_bp as khatma_bp
+        api.register_blueprint(khatma_bp, url_prefix="/khatma")
         print("✓ khatma blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register khatma blueprint: {e}")
 
     try:
-        from resources.recipe_resource import recipe_bp #as recipe_bp
-        app.register_blueprint(recipe_bp, url_prefix="/recipes")
+        from resources.recipe_resource import recipe_bp as recipe_bp
+        api.register_blueprint(recipe_bp, url_prefix="/recipes")
         print("✓ recipes blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register recipes blueprint: {e}")
 
 
     try:
-        from resources.user_adhkar import user_adhkar_bp
-        app.register_blueprint(user_adhkar_bp, url_prefix="/user_adhkar")
+        from resources.user_adhkar import user_adhkar_bp as user_adhkar_bp
+        api.register_blueprint(user_adhkar_bp, url_prefix="/user_adhkar")
         print("✓ user_adhkar blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register user_adhkar blueprint: {e}")
 
 
     try:
-        from resources.user_doua import user_doua_bp
-        app.register_blueprint(user_doua_bp, url_prefix="/user_doua")
+        from resources.user_doua import user_doua_bp as user_doua_bp
+        api.register_blueprint(user_doua_bp, url_prefix="/user_doua")
         print("✓ user_doua blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register user_doua blueprint: {e}")
