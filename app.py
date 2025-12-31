@@ -91,8 +91,8 @@ def create_app():
         print(f"✗ Failed to register adhkar blueprint: {e}")
 
     try:
-        from resources.ahadith_ramadhania import ahadith_bp
-        app.register_blueprint(ahadith_bp, url_prefix='/ahadith')
+        from resources.ahadith_ramadhania import ahadith_bp as ahadith_bp
+        api.register_blueprint(ahadith_bp, url_prefix='/ahadith')
         print("✓ Ahadith blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register ahadith blueprint: {e}")
@@ -119,7 +119,7 @@ def create_app():
         print(f"✗ Failed to register khatma blueprint: {e}")
 
     try:
-        from resources.recipe_resource import recipe_bp
+        from resources.recipe_resource import recipe_bp #as recipe_bp
         app.register_blueprint(recipe_bp, url_prefix="/recipes")
         print("✓ recipes blueprint registered")
     except Exception as e:

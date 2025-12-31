@@ -1,4 +1,4 @@
-
+from marshmallow import Schema
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import create_access_token, jwt_required
@@ -66,13 +66,13 @@ class UserLogout(MethodView):
         return {"message": "Logged out successfully. Please delete your access token."}, 200
 
 
-# ==================== GET ALL USERS (protected) ====================
 @user_bp.route("/")
 class UserList(MethodView):
     @jwt_required()
     @user_bp.doc(security=[{"bearerAuth": []}])  # Shows lock icon in Swagger
     @user_bp.response(200, UserSchema(many=True))
-    def get(self):
+    @user_bp.arguments(Schema, location='query')  # ← THIS IS THE FIX
+    def get(self, query_args=None):  # You can ignore the argument
         """Get list of all users (protected endpoint - for testing/admin)"""
         users = User.query.all()
         return users
