@@ -1,9 +1,11 @@
-from flask import Blueprint
+from flask import request
+from flask_smorest import Blueprint, abort
+from flask.views import MethodView
 from datetime import datetime, timedelta, date
 from models.sunnah_prayer import SunnahPrayer
 from resources.prayer import calculate_prayer_times, DEFAULT_LOCATION
 
-sunnah_bp = Blueprint("sunnah_prayer", __name__)
+sunnah_bp = Blueprint("sunnah_prayer", __name__, description = "Sunnah prayers")
 
 def calculate_sunnah_time(name, timings):
     try:

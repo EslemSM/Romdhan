@@ -1,9 +1,11 @@
-from flask import Blueprint
+from flask_smorest import Blueprint, abort
+from flask.views import MethodView
+from flask import request
 from datetime import date
 import praytimes  # Changed from adhan to praytimes
 import pytz
 
-prayer_bp = Blueprint("prayer", __name__)
+prayer_bp = Blueprint("prayer", __name__, "Prayers time")
 
 TIMEZONE = pytz.timezone("Africa/Tunis")
 

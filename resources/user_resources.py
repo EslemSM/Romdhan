@@ -1,73 +1,78 @@
 
-from flask import Blueprint, request
+from flask.views import MethodView
+from flask_smorest import Blueprint, abort
 from flask_jwt_extended import create_access_token, jwt_required
 from models.user import User
 from models.db import db
 from schemas import UserSchema, UserRegisterSchema, UserLoginSchema, TokenSchema
 from flask_jwt_extended import get_jwt_identity
 
-user_bp = Blueprint("users", __name__)
+user_bp = Blueprint("users", __name__, description = "Make an account")
 
-user_schema = UserSchema()
-user_register_schema = UserRegisterSchema()
-user_login_schema = UserLoginSchema()
-token_schema = TokenSchema()
+#user_schema = UserSchema()
+#user_register_schema = UserRegisterSchema()
+#user_login_schema = UserLoginSchema()
+#token_schema = TokenSchema()
 
 # 🟢 REGISTER
-# 🟢 REGISTER (with optional password length check)
-@user_bp.route("/register", methods=["POST"])
-def register():
-    try:
-        # Validate input with UserRegisterSchema
-        data = user_register_schema.load(request.get_json())
-        
+# 🟢 REGISTER
+@user_bp.route("/register")
+class UserRegister(MethodView):
+
+    @user_bp.arguments(UserRegisterSchema)
+    @user_bp.response(201, UserSchema)
+    def post(self, data):
+        """Register a new user"""
+
         if User.query.filter_by(username=data["username"]).first():
-            return {"error": "User already exists"}, 409
+            abort(409, message="User already exists")
 
         user = User(username=data["username"])
-        user.set_password(data["password"])  # Now uses pbkdf2_sha256
+        user.set_password(data["password"])
 
         db.session.add(user)
         db.session.commit()
 
-        # Return user data with UserSchema
-        return user_schema.dump(user), 201
-    except ValueError as e:  # Catch password validation errors from model
-        return {"error": str(e)}, 400
-    except Exception as e:
-        db.session.rollback()
-        return {"error": f"Registration failed: {str(e)}"}, 500
+        return user
+
+
+
 # 🔐 LOGIN
-@user_bp.route("/login", methods=["POST"])
-def login():
-    try:
-        # Validate input with UserLoginSchema
-        data = user_login_schema.load(request.get_json())
+@user_bp.route("/login")
+class UserLogin(MethodView):
+
+    @user_bp.arguments(UserLoginSchema)
+    @user_bp.response(200, TokenSchema)
+    def post(self, data):
+        """Login user"""
 
         user = User.query.filter_by(username=data["username"]).first()
         if not user or not user.check_password(data["password"]):
-            return {"error": "Invalid credentials"}, 401
+            abort(401, message="Invalid credentials")
 
         access_token = create_access_token(identity=str(user.id))
+        return {"access_token": access_token}
 
-        # Return token with TokenSchema, plus user data
-        return {
-            "access_token": token_schema.dump({"access_token": access_token})["access_token"],
-            "user": user_schema.dump(user)
-        }, 200
-    except Exception as e:
-        return {"error": f"Login failed: {str(e)}"}, 500
 
-# 🔓 LOGOUT (Client-side: Delete the token)
-@user_bp.route("/logout", methods=["POST"])
-@jwt_required()  # Requires valid token
-def logout():
-    # JWT is stateless, so logout is client-side (delete token).
-    return {"message": "Logged out successfully. Please delete your access token."}, 200
 
-# (Optional) List users — for testing only (protected)
-@user_bp.route("/", methods=["GET"])
-@jwt_required()  # Protect with JWT
-def get_users():
-    users = User.query.all()
-    return user_schema.dump(users, many=True), 200
+# ==================== LOGOUT ====================
+@user_bp.route("/logout")
+class UserLogout(MethodView):
+    @jwt_required()
+    @user_bp.doc(security=[{"bearerAuth": []}])  # Shows lock icon in Swagger
+    @user_bp.response(200, description="Logout successful (client should delete token)")
+    def post(self):
+        """Logout - client should delete the stored token"""
+        return {"message": "Logged out successfully. Please delete your access token."}, 200
+
+
+# ==================== GET ALL USERS (protected) ====================
+@user_bp.route("/")
+class UserList(MethodView):
+    @jwt_required()
+    @user_bp.doc(security=[{"bearerAuth": []}])  # Shows lock icon in Swagger
+    @user_bp.response(200, UserSchema(many=True))
+    def get(self):
+        """Get list of all users (protected endpoint - for testing/admin)"""
+        users = User.query.all()
+        return users

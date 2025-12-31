@@ -1,11 +1,13 @@
-from flask import Blueprint, request
+from flask.views import MethodView
+from flask_smorest import Blueprint, abort
+from flask import request
 from models.doua import Doua
 from models.favorite_doua import FavoriteDoua
 from models.db import db
 from schemas import DouaSchema, FavoriteDouaSchema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 # IMPORTANT: blueprint name does NOT affect URL, but keep it clean
-doua_bp = Blueprint("doua_bp", __name__)
+doua_bp = Blueprint("doua_bp", __name__, description = "Get Doua by calling Allah's name")
 
 doua_schema = DouaSchema()
 doua_list_schema = DouaSchema(many=True)

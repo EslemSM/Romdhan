@@ -1,7 +1,7 @@
 import requests
-from flask import Blueprint
+from flask_smorest import Blueprint, abort
 
-tafseer_bp = Blueprint("quran_tafsir", __name__)
+tafseer_bp = Blueprint("quran_tafsir", __name__, description = "Tafseer Quran")
 
 BASE_URL_AYAH = "https://api.alquran.cloud/v1/ayah"  # For plain ayah text
 BASE_URL_TAFSIR = "https://api.alquran.cloud/v1/ayah"  # For tafsir (with /ar.muyassar)

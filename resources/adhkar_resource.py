@@ -1,4 +1,6 @@
-from flask import Blueprint, request
+from flask_smorest import Blueprint, abort
+from flask.views import MethodView
+from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.adhkar import Adhkar
 from models.favorite_adhkar import FavoriteAdhkar
@@ -6,7 +8,7 @@ from models.db import db
 from schemas import AdhkarSchema, FavoriteAdhkarSchema
 
 
-adhkar_bp = Blueprint('adhkar', __name__)
+adhkar_bp = Blueprint('adhkar', __name__, "Remembering Allah")
 
 adhkar_schema = AdhkarSchema()
 adhkar_list_schema = AdhkarSchema(many=True)

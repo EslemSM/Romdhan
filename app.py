@@ -1,6 +1,8 @@
 from flask import Flask
 from models.db import db
 from flask_jwt_extended import JWTManager
+from flask_smorest import Api
+import os 
 
 def create_app():
     print("CREATE_APP CALLED") 
@@ -14,9 +16,40 @@ def create_app():
         'connect_args': {'connect_timeout': 5}
     }
 
-    app.config["JWT_SECRET_KEY"] = "ramadhan-secret-key"  # change later
+    app.config["JWT_SECRET_KEY"] = os.getenv(
+        "JWT_SECRET_KEY",
+        "ramadhan-secret-key"  # fallback for local dev
+        )
     jwt = JWTManager(app)
+    
     # Initialize database (with error handling - don't fail app startup if DB unavailable)
+
+    # 🔹 New: Flask-Smorest / Swagger configuration
+    app.config["PROPAGATE_EXCEPTIONS"] = True
+    app.config["API_TITLE"] = "Ramadhan Journey API"
+    app.config["API_VERSION"] = "v1"
+    app.config["OPENAPI_VERSION"] = "3.0.3"
+    app.config["OPENAPI_URL_PREFIX"] = "/"                  # Base path for OpenAPI
+    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui/" # Trailing slash is required
+    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/"
+    # 🔹 NEW: Add JWT Bearer Auth to Swagger/OpenAPI
+    app.config["OPENAPI_SPEC_OPTIONS"] = {
+        "components": {
+            "securitySchemes": {
+                "bearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "bearerFormat": "JWT",
+                    "description": "Enter JWT token as: Bearer <your_token_here>"
+                }
+            }
+        }
+    }
+
+
+
+    api = Api(app)
+
     try:
         db.init_app(app)
         print("✓ Database initialized")
@@ -24,10 +57,11 @@ def create_app():
         print(f"⚠ Database initialization warning (app will continue): {type(e).__name__}: {e}")
         # Don't fail the app if database isn't available - some endpoints don't need it
 
+        
     # Import and register blueprints (with error handling)
     try:
-        from resources.prayer import prayer_bp
-        app.register_blueprint(prayer_bp, url_prefix="/prayer")
+        from resources.prayer import prayer_bp as prayer_bp
+        api.register_blueprint(prayer_bp, url_prefix="/prayer")
         print("✓ Prayer blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register prayer blueprint: {e}")
@@ -35,22 +69,22 @@ def create_app():
         traceback.print_exc()
 
     try:
-        from resources.sunnah_prayer import sunnah_bp
-        app.register_blueprint(sunnah_bp, url_prefix="/sunnah_prayer")
+        from resources.sunnah_prayer import sunnah_bp as sunnah_bp
+        api.register_blueprint(sunnah_bp, url_prefix="/sunnah_prayer")
         print("✓ Sunnah prayer blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register sunnah_prayer blueprint: {e}")
 
     try:
-        from resources.quran_tafsir import tafseer_bp
-        app.register_blueprint(tafseer_bp, url_prefix="/quran_tafsir")
+        from resources.quran_tafsir import tafseer_bp as tafseer_bp
+        api.register_blueprint(tafseer_bp, url_prefix="/quran_tafsir")
         print("✓ Quran tafsir blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register quran_tafsir blueprint: {e}")
 
     try:
-        from resources.adhkar_resource import adhkar_bp
-        app.register_blueprint(adhkar_bp, url_prefix='/adhkar')
+        from resources.adhkar_resource import adhkar_bp as adhkar_bp
+        api.register_blueprint(adhkar_bp, url_prefix='/adhkar')
         print("✓ Adhkar blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register adhkar blueprint: {e}")
@@ -61,17 +95,17 @@ def create_app():
         print("✓ Ahadith blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register ahadith blueprint: {e}")
-
+    #doua is done on swagger
     try:
-        from resources.doua_resource import doua_bp
-        app.register_blueprint(doua_bp, url_prefix='/doua')
+        from resources.doua_resource import doua_bp as doua_bp
+        api.register_blueprint(doua_bp, url_prefix='/doua')
         print("✓ Doua blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register doua blueprint: {e}")
 
     try:
-        from resources.user_resources import user_bp
-        app.register_blueprint(user_bp, url_prefix="/users")
+        from resources.user_resources import user_bp as user_bp
+        api.register_blueprint(user_bp, url_prefix="/users")
         print("✓ user blueprint registered")
     except Exception as e:
         print(f"✗ Failed to register doua blueprint: {e}")
