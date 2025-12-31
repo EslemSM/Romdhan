@@ -33,7 +33,8 @@ def create_app():
     app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui/" # Trailing slash is required
     app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/"
     # 🔹 NEW: Add JWT Bearer Auth to Swagger/OpenAPI
-    app.config["OPENAPI_SPEC_OPTIONS"] = {
+    app.config["API_SPEC_OPTIONS"] = {
+        "security": [{"bearerAuth": []}],
         "components": {
             "securitySchemes": {
                 "bearerAuth": {
