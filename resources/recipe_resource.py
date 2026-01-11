@@ -6,24 +6,18 @@ from models.favorite_recipe import FavoriteRecipe
 from models.db import db
 from schemas import RecipeSchema
 
-# -------------------------------------------------------------------
-# Blueprint
-# -------------------------------------------------------------------
+
 recipe_bp = Blueprint(
     "recipes",
     __name__,
     description="Recipes & favorites management"
 )
 
-# -------------------------------------------------------------------
-# Response schemas
-# -------------------------------------------------------------------
+
 recipe_schema = RecipeSchema()
 recipe_list_schema = RecipeSchema(many=True)
 
-# -------------------------------------------------------------------
-# Input schemas (Swagger request bodies)
-# -------------------------------------------------------------------
+
 class RecipeCreateSchema(Schema):
     title = fields.Str(required=True)
     description = fields.Str()
@@ -43,10 +37,6 @@ class RecipePatchSchema(Schema):
 class FavoriteRecipeCreateSchema(Schema):
     recipe_id = fields.Int(required=True)
 
-
-# -------------------------------------------------------------------
-# 🔐 GET all public recipes
-# -------------------------------------------------------------------
 @recipe_bp.route("/", methods=["GET"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.response(200, recipe_list_schema)
@@ -55,9 +45,6 @@ def get_all_public():
     return Recipe.query.filter_by(created_by_user_id=None).all()
 
 
-# -------------------------------------------------------------------
-# 🔐 GET public recipes by taste
-# -------------------------------------------------------------------
 @recipe_bp.route("/taste/<string:taste>", methods=["GET"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.response(200, recipe_list_schema)
@@ -72,9 +59,6 @@ def get_public_by_taste(taste):
     ).all()
 
 
-# -------------------------------------------------------------------
-# 🔐 GET public recipes by category
-# -------------------------------------------------------------------
 @recipe_bp.route("/category/<string:category>", methods=["GET"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.response(200, recipe_list_schema)
@@ -89,9 +73,7 @@ def get_public_by_category(category):
     ).all()
 
 
-# -------------------------------------------------------------------
-# 🔐 GET user's own recipes
-# -------------------------------------------------------------------
+
 @recipe_bp.route("/my-recipes", methods=["GET"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.response(200, recipe_list_schema)
@@ -101,9 +83,7 @@ def get_my_recipes():
     return Recipe.query.filter_by(created_by_user_id=user_id).all()
 
 
-# -------------------------------------------------------------------
-# 🔐 POST add recipe
-# -------------------------------------------------------------------
+
 @recipe_bp.route("/", methods=["POST"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.arguments(RecipeCreateSchema)
@@ -111,6 +91,18 @@ def get_my_recipes():
 @jwt_required()
 def add_recipe(data):
     user_id = get_jwt_identity()
+
+    if "title" in data:
+        data["name"] = data.pop("title")
+    data.pop("description", None)
+    ingredients = data.get("ingredients")
+    if ingredients:
+        data["ingredients"] = [i.strip() for i in ingredients.split(",")]
+    else:
+        data["ingredients"] = []
+    if "steps" not in data or data["steps"] is None:
+        data["steps"] = "" 
+
 
     recipe = Recipe(**data)
     recipe.created_by_user_id = user_id
@@ -120,9 +112,6 @@ def add_recipe(data):
     return recipe
 
 
-# -------------------------------------------------------------------
-# 🔐 PATCH update user's recipe
-# -------------------------------------------------------------------
 @recipe_bp.route("/my-recipes/<int:id>", methods=["PATCH"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.arguments(RecipePatchSchema)
@@ -136,6 +125,21 @@ def update_my_recipe(data, id):
         created_by_user_id=user_id
     ).first_or_404()
 
+    # Map title → name
+    if "title" in data:
+        data["name"] = data.pop("title")
+
+    # Remove description (ignored)
+    data.pop("description", None)
+
+    # Convert ingredients if provided
+    if "ingredients" in data:
+        ingredients = data["ingredients"]
+        if ingredients:
+            data["ingredients"] = [i.strip() for i in ingredients.split(",")]
+        else:
+            data["ingredients"] = []
+
     for key, value in data.items():
         setattr(recipe, key, value)
 
@@ -143,9 +147,7 @@ def update_my_recipe(data, id):
     return recipe
 
 
-# -------------------------------------------------------------------
-# 🔐 DELETE user's recipe
-# -------------------------------------------------------------------
+
 @recipe_bp.route("/my-recipes/<int:id>", methods=["DELETE"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.response(200)
@@ -163,9 +165,7 @@ def delete_my_recipe(id):
     return {"message": "Recipe deleted"}
 
 
-# -------------------------------------------------------------------
-# 🔐 GET favorites
-# -------------------------------------------------------------------
+
 @recipe_bp.route("/favorites", methods=["GET"])
 @recipe_bp.doc(security=[{"bearerAuth": []}])
 @recipe_bp.response(200, recipe_list_schema)
