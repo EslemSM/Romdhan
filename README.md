@@ -105,7 +105,6 @@ Clone the repository:
 
 Bash
 
-git clone https://github.com/your-username/romdhan-journey-api.git
 cd romdhan-journey-api
 Install the required dependencies:
 
