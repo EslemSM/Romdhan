@@ -130,6 +130,3 @@ Functionality, reliability, and authorization are validated using Insomnia. Test
 
 Developed by: Islem Smiai Supervised by: Mr. Ben Messaoud Montassar Institution: Tunis Business School 
 
-
-
-Would you like me to generate a specific requirements.txt file or a sample .env configuration for this repository?
